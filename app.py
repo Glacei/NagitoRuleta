@@ -11,10 +11,11 @@ class RouletteApp(ctk.CTk):
 
         # Configuración de la ventana principal
         self.title("RULETA CHUPI :D")
-        self.geometry("800x760")
-        self.minsize(680, 640)
+        self.geometry("900x660")
+        self.minsize(900, 660)
         self.configure(fg_color="#10151d")
         self.is_spinning = False
+        self.resize_job = None
 
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
@@ -42,13 +43,13 @@ class RouletteApp(ctk.CTk):
         content = ctk.CTkFrame(self, fg_color="transparent")
         self.content_frame = content
         content.grid(row=1, column=0, padx=0, pady=(0, 12), sticky="nsew")
-        content.grid_columnconfigure(0, weight=3)
-        content.grid_columnconfigure(1, weight=2)
+        content.grid_columnconfigure(0, weight=1, uniform="main_columns")
+        content.grid_columnconfigure(1, weight=1, uniform="main_columns")
         content.grid_rowconfigure(1, weight=1)
 
         # Seccion donde se le deja al usuario elegir el maximo numero que puede salir en la ruleta.
         controls = ctk.CTkFrame(content, fg_color="#1a222d", corner_radius=14)
-        controls.grid(row=0, column=0, padx=(16, 8), pady=(0, 10), sticky="ew")
+        controls.grid(row=0, column=0, padx=(16, 5), pady=(0, 10), sticky="ew")
         controls.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
@@ -70,7 +71,7 @@ class RouletteApp(ctk.CTk):
 
         # El panel del resultado te enseña numeros a lo random para dar la sensacion de ruleta y luego muestra el numero ganador.
         result_frame = ctk.CTkFrame(content, fg_color="#182936", corner_radius=24)
-        result_frame.grid(row=1, column=0, padx=(16, 8), pady=(0, 10), sticky="nsew")
+        result_frame.grid(row=1, column=0, padx=(16, 5), pady=(0, 10), sticky="nsew")
 
         ctk.CTkLabel(
             result_frame,
@@ -105,7 +106,7 @@ class RouletteApp(ctk.CTk):
         )
         self.character_label = ctk.CTkLabel(content, image=self.character_image, text="")
         self.character_label.grid(
-            row=0, column=1, rowspan=3, padx=0, pady=0, sticky="s"
+            row=0, column=1, rowspan=3, padx=(2, 5), pady=0, sticky="se"
         )
         self.bind("<Configure>", self.resize_character_image)
 
@@ -119,18 +120,24 @@ class RouletteApp(ctk.CTk):
             hover_color="#c95741",
             command=self.spin,
         )
-        self.spin_button.grid(row=2, column=0, padx=(16, 8), sticky="ew")
+        self.spin_button.grid(row=2, column=0, padx=(16, 5), sticky="ew")
 
     def resize_character_image(self, _event=None):
-        # Espera a que Tk termine de recolocar los widgets antes de medirlos.
-        self.after_idle(self._apply_character_image_size)
+        # Agrupa varios eventos de resize en una sola actualización.
+        if self.resize_job is None:
+            self.resize_job = self.after_idle(self._apply_character_image_size)
 
     def _apply_character_image_size(self):
-        # Ajusta la imagen a la seccion inferior sin deformar sus proporciones.
+        self.resize_job = None
+
+        # Iguala la altura de la imagen con la altura total de la ruleta.
         image_ratio = self.character_source_image.height / self.character_source_image.width
-        available_width = max(1, int(self.winfo_width() * 0.32))
-        image_width = available_width
-        image_height = int(image_width * image_ratio)
+        left_section = self.content_frame.grid_bbox(0, 0, 0, 2)
+        roulette_height = left_section[3]
+        # Usa la mitad del contenido para evitar que la imagen ensanche su columna.
+        available_width = max(1, int(self.content_frame.winfo_width() / 2) - 7)
+        image_height = min(roulette_height, int(available_width * image_ratio))
+        image_width = max(1, int(image_height / image_ratio))
         image_size = (image_width, image_height)
 
         if image_size != self.character_image.cget("size"):
