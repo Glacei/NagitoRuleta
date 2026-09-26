@@ -116,8 +116,8 @@ class RouletteApp(ctk.CTk):
             height=50,
             corner_radius=12,
             font=ctk.CTkFont(size=15, weight="bold"),
-            fg_color="#e56b52",
-            hover_color="#c95741",
+            fg_color="#176B45",
+            hover_color="#105336",
             command=self.spin,
         )
         self.spin_button.grid(row=2, column=0, padx=(16, 5), sticky="ew")
