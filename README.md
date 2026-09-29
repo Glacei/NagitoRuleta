@@ -1,2 +1,2 @@
 # NAGITO RULETA
-## Literalmente Nagito Ruleta
+### Literalmente Nagito Ruleta
